@@ -17,6 +17,7 @@
 package com.zxcpoiu.incallmanager;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothHeadset;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,9 +34,9 @@ import android.os.PowerManager;
 import android.os.Build;
 import android.os.Handler;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
@@ -274,11 +275,14 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         if (wiredHeadsetReceiver == null) {
             Log.d(TAG, "startWiredHeadsetEvent()");
             IntentFilter filter = new IntentFilter(ACTION_HEADSET_PLUG);
+            filter.addAction(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED);
+            filter.addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
             wiredHeadsetReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    if (ACTION_HEADSET_PLUG.equals(intent.getAction())) {
-                        hasWiredHeadset = intent.getIntExtra("state", 0) == 1;
+                    String action = intent.getAction();
+                    if (action.equals(ACTION_HEADSET_PLUG)) {
+                        hasWiredHeadset = true;
                         updateAudioRoute();
                         String deviceName = intent.getStringExtra("name");
                         if (deviceName == null) {
@@ -289,6 +293,34 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                         data.putBoolean("hasMic", (intent.getIntExtra("microphone", 0) == 1) ? true : false);
                         data.putString("deviceName", deviceName);
                         sendEvent("WiredHeadset", data);
+                    } else if (action.equals(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED)) {
+                        int state = intent.getIntExtra(
+                                BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_AUDIO_DISCONNECTED);
+                        WritableMap data = Arguments.createMap();
+                        data.putBoolean("isWireless", true);
+                        if (state == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
+                            data.putBoolean("isPlugged", true);
+                            data.putBoolean("isSCO", true);
+                            sendEvent("WiredHeadset", data);
+                        } else if (state == BluetoothHeadset.STATE_AUDIO_DISCONNECTED) {
+                            data.putBoolean("isSCO", false);
+                            data.putBoolean("isPlugged", true);
+                            sendEvent("WiredHeadset", data);
+                        }
+                    } else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
+                        int state =
+                                intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_DISCONNECTED);
+                        WritableMap data = Arguments.createMap();
+                        data.putBoolean("isWireless", true);
+                        if (state == BluetoothHeadset.STATE_CONNECTED) {
+                            data.putBoolean("isPlugged", true);
+                            data.putBoolean("isSCO", false);
+                            sendEvent("WiredHeadset", data);
+                        } else if (state == BluetoothHeadset.STATE_DISCONNECTED) {
+                            data.putBoolean("isSCO", false);
+                            data.putBoolean("isPlugged", false);
+                            sendEvent("WiredHeadset", data);
+                        }
                     } else {
                         hasWiredHeadset = false;
                     }
@@ -750,7 +782,17 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         if (enable != audioManager.isSpeakerphoneOn())  {
             Log.d(TAG, "setSpeakerphoneOn(): " + enable);
             audioManager.setSpeakerphoneOn(enable);
+            if (!enable) {
+                reConnectBluetooth();
+            } else {
+//                bluetoothManager.stopScoAudio();
+            }
         }
+    }
+
+    public void reConnectBluetooth() {
+        bluetoothManager.updateDevice();
+        bluetoothManager.startScoAudio();
     }
 
     // --- TODO (zxcpoiu): These two api name is really confusing. should be changed.

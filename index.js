@@ -3,7 +3,10 @@ var _InCallManager = require('react-native').NativeModules.InCallManager;
 import {
     Platform,
     Vibration,
+    NativeEventEmitter,
 } from 'react-native';
+
+const InCallManagerEventEmitter = new NativeEventEmitter(_InCallManager);
 
 class InCallManager {
     constructor() {
@@ -181,6 +184,18 @@ class InCallManager {
     async chooseAudioRoute(route) {
         let result = await _InCallManager.chooseAudioRoute(route);
         return result;
+    }
+
+    addEventListener(...args) {
+        InCallManagerEventEmitter.addListener(...args)
+    }
+
+    removeEventListener(...args) {
+        InCallManagerEventEmitter.removeListener(...args)
+    }
+
+    removeAllListeners(...args) {
+        InCallManagerEventEmitter.removeAllListeners(args)
     }
 }
 

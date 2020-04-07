@@ -311,11 +311,11 @@ public class AppRTCBluetoothManager {
     Log.d(TAG, "startSco: BT state=" + bluetoothState + ", "
             + "attempts: " + scoConnectionAttempts + ", "
             + "SCO is on: " + isScoOn());
-    if (scoConnectionAttempts >= MAX_SCO_CONNECTION_ATTEMPTS) {
-      Log.e(TAG, "BT SCO connection fails - no more attempts");
-      return false;
-    }
-    if (bluetoothState != State.HEADSET_AVAILABLE) {
+//    if (scoConnectionAttempts >= MAX_SCO_CONNECTION_ATTEMPTS) {
+//      Log.e(TAG, "BT SCO connection fails - no more attempts");
+//      return false;
+//    }
+    if (bluetoothState != State.HEADSET_AVAILABLE || bluetoothState == State.SCO_CONNECTING) {
       Log.e(TAG, "BT SCO connection fails - no headset available");
       return false;
     }
