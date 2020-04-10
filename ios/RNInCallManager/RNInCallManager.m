@@ -248,7 +248,7 @@ RCT_EXPORT_METHOD(setSpeakerphoneOn:(BOOL)enable)
     if(!enable){
         NSLog(@"Routing audio via Earpiece");
         @try {
-            success = [_audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
+            success = [_audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth error:&error];
             if (!success)  NSLog(@"Cannot set category due to error: %@", error);
             success = [_audioSession setMode:AVAudioSessionModeVoiceChat error:&error];
             if (!success)  NSLog(@"Cannot set mode due to error: %@", error);
@@ -273,7 +273,7 @@ RCT_EXPORT_METHOD(setSpeakerphoneOn:(BOOL)enable)
             success = [_audioSession setMode:AVAudioSessionModeVideoChat error: &error];
             if (!success)  NSLog(@"Cannot set mode due to error: %@", error);
             [_audioSession setPreferredOutputNumberOfChannels:0 error:nil];
-            [_audioSession overrideOutputAudioPort:[AVAudioSessionPortBuiltInSpeaker intValue] error: &error];
+            [_audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error: &error];
             if (!success)  NSLog(@"Port override failed due to: %@", error);
             success = [_audioSession setActive:YES error:&error];
             if (!success) NSLog(@"Audio session override failed: %@", error);
