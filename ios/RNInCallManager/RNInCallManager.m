@@ -138,35 +138,35 @@ RCT_EXPORT_METHOD(start:(NSString *)mediaType
         NSLog(@"RNInCallManager.start(): recordPermission should be granted. state: %@", _recordPermission);
         return;
     }
-    _media = mediaType;
+//    _media = mediaType;
 
-    // --- auto is always true on ios
-    if ([_media isEqualToString:@"video"]) {
-        _incallAudioMode = AVAudioSessionModeVideoChat;
-    } else {
-        _incallAudioMode = AVAudioSessionModeVoiceChat;
-    }
+//    // --- auto is always true on ios
+//    if ([_media isEqualToString:@"video"]) {
+//        _incallAudioMode = AVAudioSessionModeVideoChat;
+//    } else {
+//        _incallAudioMode = AVAudioSessionModeVoiceChat;
+//    }
     NSLog(@"RNInCallManager.start() start InCallManager. media=%@, type=%@, mode=%@", _media, _media, _incallAudioMode);
     [self storeOriginalAudioSetup];
     _forceSpeakerOn = 0;
     [self startAudioSessionNotification];
-    [self audioSessionSetCategory:_incallAudioCategory
-                          options:0
-                       callerMemo:NSStringFromSelector(_cmd)];
-    [self audioSessionSetMode:_incallAudioMode
-                   callerMemo:NSStringFromSelector(_cmd)];
-    [self audioSessionSetActive:YES
-                        options:0
-                     callerMemo:NSStringFromSelector(_cmd)];
-
-    if (ringbackUriType.length > 0) {
-        NSLog(@"RNInCallManager.start() play ringback first. type=%@", ringbackUriType);
-        [self startRingback:ringbackUriType];
-    }
-
-    if ([_media isEqualToString:@"audio"]) {
-        [self startProximitySensor];
-    }
+//    [self audioSessionSetCategory:_incallAudioCategory
+//                          options:0
+//                       callerMemo:NSStringFromSelector(_cmd)];
+//    [self audioSessionSetMode:_incallAudioMode
+//                   callerMemo:NSStringFromSelector(_cmd)];
+//    [self audioSessionSetActive:YES
+//                        options:0
+//                     callerMemo:NSStringFromSelector(_cmd)];
+//
+//    if (ringbackUriType.length > 0) {
+//        NSLog(@"RNInCallManager.start() play ringback first. type=%@", ringbackUriType);
+//        [self startRingback:ringbackUriType];
+//    }
+//
+//    if ([_media isEqualToString:@"audio"]) {
+//        [self startProximitySensor];
+//    }
     [self setKeepScreenOn:YES];
     _audioSessionInitialized = YES;
     //self.debugAudioSession()
@@ -868,6 +868,45 @@ RCT_EXPORT_METHOD(getIsWiredHeadsetPluggedIn:(RCTPromiseResolveBlock)resolve
     _isAudioSessionInterruptionRegistered = NO;
 }
 
+- (NSDictionary *) currentAudioOutputDeviceState
+{
+    AVAudioSessionPortDescription *port = [[[_audioSession currentRoute] outputs] firstObject];
+    NSInteger portValue = [self defineAudioOutputPort:port];
+    BOOL isHeadSetConnected = portValue == 2;
+    return @{
+            @"isPlugged": @(isHeadSetConnected),
+            @"isSCO": @(isHeadSetConnected),
+            @"deviceValue": @(portValue),
+            @"deviceName": [port portName],
+    };
+}
+
+- (void) sendEventUpdateAudioOutputDeviceState
+{
+    [self sendEventWithName:@"WiredHeadset"
+        body: [self currentAudioOutputDeviceState]];
+}
+
+RCT_REMAP_METHOD(getCurrentAudioOutputDeviceState,
+                 resolve:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject)
+{
+    resolve([self currentAudioOutputDeviceState]);
+}
+
+- (NSInteger) defineAudioOutputPort:(AVAudioSessionPortDescription *)port
+{
+    NSInteger portValue = 2;
+    if ([[port portType] isEqualToString:AVAudioSessionPortBuiltInSpeaker]) {
+        portValue = 1;
+    } else if ([[port portType] isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
+        portValue = 0;
+    }
+    
+    return portValue;
+}
+
+
 - (void)startAudioSessionRouteChangeNotification
 {
         if (_isAudioSessionRouteChangeRegistered) {
@@ -899,23 +938,23 @@ RCT_EXPORT_METHOD(getIsWiredHeadsetPluggedIn:(RCTPromiseResolveBlock)resolve
                     break;
                 case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: NewDeviceAvailable");
-                    if ([self checkAudioRoute:@[AVAudioSessionPortHeadsetMic]
-                                    routeType:@"input"]) {
-                        [self sendEventWithName:@"WiredHeadset"
-                                           body:@{
-                                               @"isPlugged": @YES,
-                                               @"hasMic": @YES,
-                                               @"deviceName": AVAudioSessionPortHeadsetMic,
-                                           }];
-                    } else if ([self checkAudioRoute:@[AVAudioSessionPortHeadphones]
-                                           routeType:@"output"]) {
-                        [self sendEventWithName:@"WiredHeadset"
-                                           body:@{
-                                               @"isPlugged": @YES,
-                                               @"hasMic": @NO,
-                                               @"deviceName": AVAudioSessionPortHeadphones,
-                                           }];
-                    }
+//                    if ([self checkAudioRoute:@[AVAudioSessionPortHeadsetMic]
+//                                    routeType:@"input"]) {
+//                        [self sendEventWithName:@"WiredHeadset"
+//                                           body:@{
+//                                               @"isPlugged": @YES,
+//                                               @"hasMic": @YES,
+//                                               @"deviceName": AVAudioSessionPortHeadsetMic,
+//                                           }];
+//                    } else if ([self checkAudioRoute:@[AVAudioSessionPortHeadphones]
+//                                           routeType:@"output"]) {
+//                        [self sendEventWithName:@"WiredHeadset"
+//                                           body:@{
+//                                               @"isPlugged": @YES,
+//                                               @"hasMic": @NO,
+//                                               @"deviceName": AVAudioSessionPortHeadphones,
+//                                           }];
+//                    }
                     break;
                 case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: OldDeviceUnavailable");
@@ -930,7 +969,7 @@ RCT_EXPORT_METHOD(getIsWiredHeadsetPluggedIn:(RCTPromiseResolveBlock)resolve
                     break;
                 case AVAudioSessionRouteChangeReasonCategoryChange:
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: CategoryChange. category=%@ mode=%@", _audioSession.category, _audioSession.mode);
-                    [self updateAudioRoute];
+//                    [self updateAudioRoute];
                     break;
                 case AVAudioSessionRouteChangeReasonOverride:
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: Override");

@@ -24,6 +24,12 @@ class InCallManager {
         this.requestCameraPermission = this.requestCameraPermission.bind(this);
         this.checkRecordPermission();
         this.checkCameraPermission();
+
+        this.AUDIO_OUTPUT = {
+            EARPIECE: 0,
+            SPEAKER: 1,
+            BLUETOOTH: 2,
+        }
     }
 
     start(setup) {
@@ -184,6 +190,10 @@ class InCallManager {
     async chooseAudioRoute(route) {
         let result = await _InCallManager.chooseAudioRoute(route);
         return result;
+    }
+
+    getCurrentAudioOutputDeviceState() {
+        return _InCallManager.getCurrentAudioOutputDeviceState()
     }
 
     addEventListener(...args) {
