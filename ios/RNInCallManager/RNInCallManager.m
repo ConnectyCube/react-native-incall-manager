@@ -937,6 +937,7 @@ RCT_REMAP_METHOD(getCurrentAudioOutputDeviceState,
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: Unknown");
                     break;
                 case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+                    [self sendEventUpdateAudioOutputDeviceState];
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: NewDeviceAvailable");
 //                    if ([self checkAudioRoute:@[AVAudioSessionPortHeadsetMic]
 //                                    routeType:@"input"]) {
@@ -957,6 +958,7 @@ RCT_REMAP_METHOD(getCurrentAudioOutputDeviceState,
 //                    }
                     break;
                 case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+                    [self sendEventUpdateAudioOutputDeviceState];
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: OldDeviceUnavailable");
                     if (![self isWiredHeadsetPluggedIn]) {
                         [self sendEventWithName:@"WiredHeadset"
@@ -972,6 +974,7 @@ RCT_REMAP_METHOD(getCurrentAudioOutputDeviceState,
 //                    [self updateAudioRoute];
                     break;
                 case AVAudioSessionRouteChangeReasonOverride:
+                    [self sendEventUpdateAudioOutputDeviceState];
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: Override");
                     break;
                 case AVAudioSessionRouteChangeReasonWakeFromSleep:

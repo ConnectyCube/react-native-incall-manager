@@ -586,43 +586,48 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
 
     @ReactMethod
     public void start(final String _media, final boolean auto, final String ringbackUriType) {
-        media = _media;
-        if (media.equals("video")) {
-            defaultSpeakerOn = true;
-        } else {
-            defaultSpeakerOn = false;
-        }
-        automatic = auto;
         if (!audioManagerActivated) {
             audioManagerActivated = true;
-
-            Log.d(TAG, "start audioRouteManager");
-            wakeLockUtils.acquirePartialWakeLock();
-            if (mRingtone != null && mRingtone.isPlaying()) {
-                Log.d(TAG, "stop ringtone");
-                stopRingtone(); // --- use brandnew instance
-            }
-            storeOriginalAudioSetup();
-            requestAudioFocus();
+        } else {
+            return;
+        }
+//        media = _media;
+//        if (media.equals("video")) {
+//            defaultSpeakerOn = true;
+//        } else {
+//            defaultSpeakerOn = false;
+//        }
+//        automatic = auto;
+//        if (!audioManagerActivated) {
+//            audioManagerActivated = true;
+//
+//            Log.d(TAG, "start audioRouteManager");
+//            wakeLockUtils.acquirePartialWakeLock();
+//            if (mRingtone != null && mRingtone.isPlaying()) {
+//                Log.d(TAG, "stop ringtone");
+//                stopRingtone(); // --- use brandnew instance
+//            }
+//            storeOriginalAudioSetup();
+//            requestAudioFocus();
             startEvents();
             bluetoothManager.start();
             // TODO: even if not acquired focus, we can still play sounds. but need figure out which is better.
-            //getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-            audioManager.setMode(defaultAudioMode);
-            setSpeakerphoneOn(defaultSpeakerOn);
-            setMicrophoneMute(false);
-            forceSpeakerOn = 0;
-            hasWiredHeadset = hasWiredHeadset();
-            defaultAudioDevice = (defaultSpeakerOn) ? AudioDevice.SPEAKER_PHONE : (hasEarpiece()) ? AudioDevice.EARPIECE : AudioDevice.SPEAKER_PHONE;
-            userSelectedAudioDevice = AudioDevice.NONE;
-            selectedAudioDevice = AudioDevice.NONE;
-            audioDevices.clear();
-            updateAudioRoute();
+//            //getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+//            audioManager.setMode(defaultAudioMode);
+//            setSpeakerphoneOn(defaultSpeakerOn);
+//            setMicrophoneMute(false);
+//            forceSpeakerOn = 0;
+//            hasWiredHeadset = hasWiredHeadset();
+//            defaultAudioDevice = (defaultSpeakerOn) ? AudioDevice.SPEAKER_PHONE : (hasEarpiece()) ? AudioDevice.EARPIECE : AudioDevice.SPEAKER_PHONE;
+//            userSelectedAudioDevice = AudioDevice.NONE;
+//            selectedAudioDevice = AudioDevice.NONE;
+//            audioDevices.clear();
+//            updateAudioRoute();
 
             if (!ringbackUriType.isEmpty()) {
                 startRingback(ringbackUriType);
             }
-        }
+//        }
     }
 
     public void stop() {
@@ -655,9 +660,9 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
 
     private void startEvents() {
         startWiredHeadsetEvent();
-        startNoisyAudioEvent();
+//        startNoisyAudioEvent();
         startMediaButtonEvent();
-        startProximitySensor(); // --- proximity event always enable, but only turn screen off when audio is routing to earpiece.
+//        startProximitySensor(); // --- proximity event always enable, but only turn screen off when audio is routing to earpiece.
         setKeepScreenOn(true);
     }
 
