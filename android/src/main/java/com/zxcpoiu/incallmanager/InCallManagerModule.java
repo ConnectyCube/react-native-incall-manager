@@ -74,6 +74,9 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
     private static SparseArray<String> mRequestPermissionCodeTargetPermission;
     private String mPackageName = "com.zxcpoiu.incallmanager";
 
+    private boolean isHeadSetConnected = false;
+    private boolean isSCOConnected = false;
+
     // --- Screen Manager
     private PowerManager mPowerManager;
     private WindowManager.LayoutParams lastLayoutParams;
@@ -299,12 +302,15 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                         WritableMap data = Arguments.createMap();
                         data.putBoolean("isWireless", true);
                         if (state == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
-                            data.putBoolean("isPlugged", true);
-                            data.putBoolean("isSCO", true);
+                            isHeadSetConnected = true;
+                            isSCOConnected = true;
+                            data.putBoolean("isPlugged", isHeadSetConnected);
+                            data.putBoolean("isSCO", isSCOConnected);
                             sendEvent("WiredHeadset", data);
                         } else if (state == BluetoothHeadset.STATE_AUDIO_DISCONNECTED) {
-                            data.putBoolean("isSCO", false);
-                            data.putBoolean("isPlugged", true);
+                            isSCOConnected = false;
+                            data.putBoolean("isSCO", isSCOConnected);
+                            data.putBoolean("isPlugged", isHeadSetConnected);
                             sendEvent("WiredHeadset", data);
                         }
                     } else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
@@ -313,12 +319,15 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                         WritableMap data = Arguments.createMap();
                         data.putBoolean("isWireless", true);
                         if (state == BluetoothHeadset.STATE_CONNECTED) {
-                            data.putBoolean("isPlugged", true);
-                            data.putBoolean("isSCO", false);
+                            isHeadSetConnected = true;
+                            data.putBoolean("isPlugged", isHeadSetConnected);
+                            data.putBoolean("isSCO", isSCOConnected);
                             sendEvent("WiredHeadset", data);
                         } else if (state == BluetoothHeadset.STATE_DISCONNECTED) {
-                            data.putBoolean("isSCO", false);
-                            data.putBoolean("isPlugged", false);
+                            isHeadSetConnected = false;
+                            isSCOConnected = false;
+                            data.putBoolean("isSCO", isHeadSetConnected);
+                            data.putBoolean("isPlugged", isSCOConnected);
                             sendEvent("WiredHeadset", data);
                         }
                     } else {
@@ -780,6 +789,14 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                 }
             }
         });
+    }
+
+    @ReactMethod
+    public void getCurrentAudioOutputDeviceState(Promise p) {
+        WritableMap data = Arguments.createMap();
+        data.putBoolean("isPlugged", isHeadSetConnected);
+        data.putBoolean("isSCO", isSCOConnected);
+        p.resolve(data);
     }
 
     @ReactMethod
