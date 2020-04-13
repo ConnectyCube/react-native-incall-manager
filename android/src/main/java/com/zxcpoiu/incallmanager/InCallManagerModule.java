@@ -593,10 +593,16 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         }
     }
 
+    void setToDisconnected() {
+        isHeadSetConnected = false;
+        isSCOConnected = false;
+    }
+
     @ReactMethod
     public void start(final String _media, final boolean auto, final String ringbackUriType) {
         if (!audioManagerActivated) {
             audioManagerActivated = true;
+            setToDisconnected();
         } else {
             return;
         }
@@ -646,6 +652,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
     @ReactMethod
     public void stop(final String busytoneUriType) {
         if (audioManagerActivated) {
+            setToDisconnected();
             stopRingback();
             if (!busytoneUriType.isEmpty() && startBusytone(busytoneUriType)) {
                 // play busytone first, and call this func again when finish
