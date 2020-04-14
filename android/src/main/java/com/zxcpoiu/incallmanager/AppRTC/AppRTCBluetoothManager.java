@@ -182,7 +182,7 @@ public class AppRTCBluetoothManager {
             Log.d(TAG, "Ignore STATE_AUDIO_DISCONNECTED initial sticky broadcast.");
             return;
           }
-          updateAudioDeviceState();
+//          updateAudioDeviceState();
         }
       }
       Log.d(TAG, "onReceive done: BT state=" + bluetoothState);
@@ -512,5 +512,13 @@ public class AppRTCBluetoothManager {
       default:
         return "INVALID";
     }
+  }
+
+  public boolean isBluetoothHeadsetConnected() {
+    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    boolean isConnected = mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()
+            && mBluetoothAdapter.getProfileConnectionState(BluetoothHeadset.HEADSET) == BluetoothHeadset.STATE_CONNECTED;
+    Log.i("bluetoothConnected",isConnected+"");
+    return  isConnected;
   }
 }

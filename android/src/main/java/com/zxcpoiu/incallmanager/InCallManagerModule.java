@@ -319,6 +319,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                         WritableMap data = Arguments.createMap();
                         data.putBoolean("isWireless", true);
                         if (state == BluetoothHeadset.STATE_CONNECTED) {
+                            setAudioMode("bluetooth");
                             isHeadSetConnected = true;
                             data.putBoolean("isPlugged", isHeadSetConnected);
                             data.putBoolean("isSCO", isSCOConnected);
@@ -598,51 +599,46 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         isSCOConnected = false;
     }
 
+    void setInitialBluetoothState() {
+        isHeadSetConnected = bluetoothManager.isBluetoothHeadsetConnected();
+        isSCOConnected = audioManager.isBluetoothScoOn();
+    }
+
     @ReactMethod
     public void start(final String _media, final boolean auto, final String ringbackUriType) {
         if (!audioManagerActivated) {
             audioManagerActivated = true;
-            setToDisconnected();
+            setInitialBluetoothState();
         } else {
             return;
         }
-//        media = _media;
-//        if (media.equals("video")) {
-//            defaultSpeakerOn = true;
-//        } else {
-//            defaultSpeakerOn = false;
-//        }
-//        automatic = auto;
-//        if (!audioManagerActivated) {
-//            audioManagerActivated = true;
-//
-//            Log.d(TAG, "start audioRouteManager");
-//            wakeLockUtils.acquirePartialWakeLock();
-//            if (mRingtone != null && mRingtone.isPlaying()) {
-//                Log.d(TAG, "stop ringtone");
-//                stopRingtone(); // --- use brandnew instance
-//            }
-//            storeOriginalAudioSetup();
-//            requestAudioFocus();
-            startEvents();
-            bluetoothManager.start();
-            // TODO: even if not acquired focus, we can still play sounds. but need figure out which is better.
-//            //getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-//            audioManager.setMode(defaultAudioMode);
-//            setSpeakerphoneOn(defaultSpeakerOn);
-//            setMicrophoneMute(false);
-//            forceSpeakerOn = 0;
-//            hasWiredHeadset = hasWiredHeadset();
-//            defaultAudioDevice = (defaultSpeakerOn) ? AudioDevice.SPEAKER_PHONE : (hasEarpiece()) ? AudioDevice.EARPIECE : AudioDevice.SPEAKER_PHONE;
-//            userSelectedAudioDevice = AudioDevice.NONE;
-//            selectedAudioDevice = AudioDevice.NONE;
-//            audioDevices.clear();
-//            updateAudioRoute();
+        startEvents();
+    }
 
-            if (!ringbackUriType.isEmpty()) {
-                startRingback(ringbackUriType);
-            }
-//        }
+    @ReactMethod
+    public void setAudioMode(String mode) {
+        if (mode.equals("bluetooth")) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.setBluetoothScoOn(true);
+            audioManager.startBluetoothSco();
+            audioManager.setSpeakerphoneOn(false);
+        } else if (mode.equals("earpiece")) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.stopBluetoothSco();
+            audioManager.setBluetoothScoOn(false);
+            audioManager.setSpeakerphoneOn(false);
+        } else if (mode.equals("speaker")) {
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.stopBluetoothSco();
+            audioManager.setBluetoothScoOn(false);
+            audioManager.setSpeakerphoneOn(true);
+        } else if (mode.equals("ringtone")) {
+            audioManager.setMode(AudioManager.MODE_RINGTONE);
+            audioManager.setSpeakerphoneOn(false);
+        } else if (mode.equals("normal")) {
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.setSpeakerphoneOn(false);
+        }
     }
 
     public void stop() {
@@ -801,8 +797,8 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
     @ReactMethod
     public void getCurrentAudioOutputDeviceState(Promise p) {
         WritableMap data = Arguments.createMap();
-        data.putBoolean("isPlugged", isHeadSetConnected);
-        data.putBoolean("isSCO", isSCOConnected);
+        data.putBoolean("isPlugged", isHeadSetConnected || bluetoothManager.isBluetoothHeadsetConnected());
+        data.putBoolean("isSCO", isSCOConnected || audioManager.isBluetoothScoOn());
         p.resolve(data);
     }
 
@@ -810,11 +806,14 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
     public void setSpeakerphoneOn(final boolean enable) {
         if (enable != audioManager.isSpeakerphoneOn())  {
             Log.d(TAG, "setSpeakerphoneOn(): " + enable);
-            audioManager.setSpeakerphoneOn(enable);
             if (!enable) {
-                reConnectBluetooth();
+                if (bluetoothManager.isBluetoothHeadsetConnected()) {
+                    setAudioMode("bluetooth");
+                } else {
+                    setAudioMode("earpiece");
+                }
             } else {
-//                bluetoothManager.stopScoAudio();
+                setAudioMode("speaker");
             }
         }
     }
