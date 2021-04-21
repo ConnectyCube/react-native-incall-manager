@@ -939,23 +939,24 @@ RCT_REMAP_METHOD(getCurrentAudioOutputDeviceState,
                 case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
                     [self sendEventUpdateAudioOutputDeviceState];
                     NSLog(@"RNInCallManager.AudioRouteChange.Reason: NewDeviceAvailable");
-                   if ([self checkAudioRoute:@[AVAudioSessionPortHeadsetMic]
-                                   routeType:@"input"]) {
-                       [self sendEventWithName:@"WiredHeadset"
-                                          body:@{
-                                              @"isPlugged": @YES,
-                                              @"hasMic": @YES,
-                                              @"deviceName": AVAudioSessionPortHeadsetMic,
-                                          }];
-                   } else if ([self checkAudioRoute:@[AVAudioSessionPortHeadphones]
-                                          routeType:@"output"]) {
-                       [self sendEventWithName:@"WiredHeadset"
-                                          body:@{
-                                              @"isPlugged": @YES,
-                                              @"hasMic": @NO,
-                                              @"deviceName": AVAudioSessionPortHeadphones,
-                                          }];
-                   }
+                    if ([self checkAudioRoute:@[AVAudioSessionPortHeadsetMic]
+                                    routeType:@"input"]) {
+                        [self sendEventWithName:@"WiredHeadset"
+                                            body:@{
+                                                @"isPlugged": @YES,
+                                                @"hasMic": @YES,
+                                                @"deviceName": AVAudioSessionPortHeadsetMic,
+                                            }];
+                    }
+                //    } else if ([self checkAudioRoute:@[AVAudioSessionPortHeadphones]
+                //                           routeType:@"output"]) {
+                //        [self sendEventWithName:@"WiredHeadset"
+                //                           body:@{
+                //                               @"isPlugged": @YES,
+                //                               @"hasMic": @NO,
+                //                               @"deviceName": AVAudioSessionPortHeadphones,
+                //                           }];
+                //    }
                     break;
                 case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
                     [self sendEventUpdateAudioOutputDeviceState];
